@@ -1,0 +1,39 @@
+version: '3'
+    
+services:
+  lab_listener:
+    build:
+      context: .
+      dockerfile: Dockerfile_listener
+    mac_address: "02:42:ac:11:00:0f"
+    networks:
+      arp_lab:
+        ipv4_address: 192.168.0.17
+
+  lab_sender:
+    build:
+      context: .
+      dockerfile: Dockerfile_sender
+    mac_address: "02:42:ac:11:00:1f"
+    networks:
+      arp_lab:
+        ipv4_address: 192.168.0.23
+
+  lab_attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile_attacker
+    ports:
+      - "77:22"  
+    mac_address: "02:42:ac:11:00:04"
+    networks:
+      arp_lab:
+        ipv4_address: 192.168.0.4
+    privileged: true  # required for raw socket access
+
+networks:
+  arp_lab: 
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+        

@@ -1,0 +1,29 @@
+FROM python:3.11
+
+RUN apt-get update && apt-get install -y socat libcap2-bin nano cron vim openssh-server
+
+# Add attacker user with password attacker
+RUN useradd -m -s /bin/bash attacker
+RUN echo "attacker:attacker" | chpasswd
+
+# Original setup
+RUN useradd -s /bin/bash ctf
+RUN setcap cap_net_raw+ep $(readlink -f $(which python3))
+RUN pip install scapy
+COPY attacker /root/
+RUN mv /root/ping_static /bin/ping
+RUN chmod +x /bin/ping
+RUN setcap cap_net_raw+ep /bin/ping
+
+# Setup SSH service
+RUN mkdir -p /var/run/sshd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Setup entrypoint
+RUN chmod +x /root/entrypoint.sh
+
+# Expose SSH port
+EXPOSE 22
+
+CMD ["/root/entrypoint.sh"]
